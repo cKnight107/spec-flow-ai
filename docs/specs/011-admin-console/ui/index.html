@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Console Phase 2 Prototype</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-mark">AI</div>
+          <div>
+            <p class="eyebrow">Enterprise Control Plane</p>
+            <h1>Admin Console</h1>
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <p class="section-label">环境</p>
+          <div class="environment-card">
+            <span class="status-dot online"></span>
+            <div>
+              <strong>Production</strong>
+              <p>华东区域 / 平台治理空间</p>
+            </div>
+          </div>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-nav"></nav>
+        <div class="sidebar-footer">
+          <p>角色占位</p>
+          <div class="role-chips">
+            <span class="role-chip active">平台管理员</span>
+            <span class="role-chip">应用管理员</span>
+            <span class="role-chip">审计人员</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div class="topbar-search">
+            <span>全局搜索</span>
+            <input type="text" value="搜索应用 / 模型 / 知识库 / 链路 ID" readonly />
+          </div>
+          <div class="topbar-actions">
+            <button class="ghost-button">快捷创建</button>
+            <button class="ghost-button">审批 6</button>
+            <div class="user-pill">
+              <span class="avatar">CK</span>
+              <div>
+                <strong>Chen Kai</strong>
+                <p>Platform Owner</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="toolbar-panel">
+          <div>
+            <p class="section-label">原型控制</p>
+            <div class="state-switcher" id="state-switcher"></div>
+          </div>
+          <div>
+            <p class="section-label">快速视图</p>
+            <div class="quick-links">
+              <button data-route="dashboard">仪表盘</button>
+              <button data-route="app-detail">应用详情</button>
+              <button data-route="model-detail">模型路由</button>
+              <button data-route="knowledge-detail">知识导入</button>
+              <button data-route="tools">工具中心</button>
+              <button data-route="observability">链路观测</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="page-root" class="page-root"></section>
+      </main>
+    </div>
+
+    <aside class="drawer hidden" id="side-drawer" aria-hidden="true">
+      <div class="drawer-header">
+        <div>
+          <p class="section-label">详情抽屉</p>
+          <h2 id="drawer-title">资源摘要</h2>
+        </div>
+        <button class="icon-button" id="drawer-close" aria-label="关闭">×</button>
+      </div>
+      <div class="drawer-body" id="drawer-body"></div>
+    </aside>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

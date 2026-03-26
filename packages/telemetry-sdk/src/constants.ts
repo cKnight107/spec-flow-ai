@@ -1,0 +1,41 @@
+export const TELEMETRY_SPAN_NAMES = {
+  HTTP_REQUEST: "http.request",
+  APP_INVOKE: "app.invoke",
+  WORKFLOW_RUN: "workflow.run",
+  PROMPT_RENDER: "prompt.render",
+  RETRIEVAL_SEARCH: "retrieval.search",
+  RETRIEVAL_RERANK: "retrieval.rerank",
+  TOOL_CALL: "tool.call",
+  LLM_CALL: "llm.call",
+  AUDIT_PERSIST: "audit.persist",
+} as const;
+
+export const TELEMETRY_ATTRIBUTE_KEYS = {
+  TENANT_ID: "saas.tenant.id",
+  APP_ID: "saas.app.id",
+  ENDUSER_ID: "enduser.id",
+  WORKFLOW_ID: "ai.workflow.id",
+  EXECUTION_ID: "ai.execution.id",
+  SERVICE_NAME: "service.name",
+  ENVIRONMENT: "deployment.environment",
+  PROVIDER: "ai.provider",
+  MODEL: "ai.model",
+  OPERATION: "ai.operation",
+  PROMPT_TEMPLATE_ID: "ai.prompt.template_id",
+  PROMPT_VERSION: "ai.prompt.version",
+  PROMPT_SOURCE: "ai.prompt.source",
+  PROMPT_HASH: "ai.prompt.hash",
+  RESPONSE_HASH: "ai.response.hash",
+  INPUT_TOKENS: "ai.usage.input_tokens",
+  OUTPUT_TOKENS: "ai.usage.output_tokens",
+  TOTAL_TOKENS: "ai.usage.total_tokens",
+  ESTIMATED_COST_USD: "ai.cost.estimated_usd",
+  FINISH_REASON: "ai.response.finish_reason",
+  CACHE_HIT: "ai.cache.hit",
+  GUARDRAIL_HIT: "ai.guardrail.hit",
+  HTTP_STATUS_CODE: "http.status_code",
+  ERROR_CODE: "error.code",
+  RETRYABLE: "error.retryable",
+} as const;
+
+export const TELEMETRY_REDACTION_VERSION = "v1";

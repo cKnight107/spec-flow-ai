@@ -1,0 +1,15 @@
+{
+  "name": "@enterprise-ai-hub/model-gateway-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@enterprise-ai-hub/shared-config": "workspace:*",
+    "@enterprise-ai-hub/telemetry-sdk": "workspace:*"
+  }
+}

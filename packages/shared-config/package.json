@@ -1,0 +1,24 @@
+{
+  "name": "@enterprise-ai-hub/shared-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./core": "./src/core/index.ts",
+    "./server": "./src/server/index.ts",
+    "./public": "./src/public/index.ts",
+    "./public/server": "./src/public/server.ts",
+    "./nest": "./src/nest/index.ts"
+  },
+  "dependencies": {
+    "yaml": "^2.8.1"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --outDir dist-test --rootDir src && node ./scripts/fix-dist-test-specifiers.mjs && node --test dist-test/server/shared-config.test.js"
+  }
+}

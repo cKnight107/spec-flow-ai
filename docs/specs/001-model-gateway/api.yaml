@@ -1,0 +1,17 @@
+openapi: 3.1.0
+info:
+  title: Model Gateway API
+  version: 0.1.0
+paths:
+  /v1/models:
+    get:
+      summary: List registered models
+      responses:
+        "200":
+          description: OK
+  /v1/chat/completions:
+    post:
+      summary: Unified chat completion endpoint
+      responses:
+        "200":
+          description: Completion response
