@@ -228,3 +228,30 @@ WECHAT_API_V3_KEY=secret-from-env
     apiV3Key: "secret-from-env",
   });
 });
+
+test("model-gateway 支持解析 provider / model / route JSON 注册表", () => {
+  const cwd = createFixtureDirectory({
+    "config.yaml": `
+APP_ENV: test
+MODEL_GATEWAY_PROVIDERS_JSON: >
+  [{"id":"openai-default","provider":"openai","baseUrl":"https://api.openai.example/v1","apiKeyEnv":"OPENAI_API_KEY"}]
+MODEL_GATEWAY_MODELS_JSON: >
+  [{"id":"gpt-4.1-mini","providerModel":"gpt-4.1-mini","providerInstance":"openai-default","type":"chat","aliases":["support-chat"],"pricing":{"inputPerMillionUsd":0.4,"outputPerMillionUsd":1.6,"currency":"USD"}}]
+MODEL_GATEWAY_ROUTES_JSON: >
+  [{"id":"route-support","requestedModel":"support-assistant","targetModel":"gpt-4.1-mini","appIds":["support-app"],"priority":100}]
+`,
+    ".env": `
+OPENAI_API_KEY=openai-secret
+`,
+  });
+
+  const result = loadConfigResult({
+    schema: modelGatewaySchema,
+    cwd,
+    processEnv: {},
+  });
+
+  assert.equal(result.config.MODEL_GATEWAY_PROVIDERS_JSON[0]?.id, "openai-default");
+  assert.equal(result.config.MODEL_GATEWAY_MODELS_JSON[0]?.aliases?.[0], "support-chat");
+  assert.equal(result.config.MODEL_GATEWAY_ROUTES_JSON[0]?.requestedModel, "support-assistant");
+});

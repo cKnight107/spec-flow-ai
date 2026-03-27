@@ -4,11 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --loader ./scripts/ts-loader.mjs src/server.ts",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "tsc --noEmit"
+    "test": "node --loader ./scripts/ts-loader.mjs --test src/**/*.test.ts"
   },
   "dependencies": {
+    "@enterprise-ai-hub/model-provider-anthropic": "workspace:*",
+    "@enterprise-ai-hub/model-provider-openai": "workspace:*",
     "@enterprise-ai-hub/shared-config": "workspace:*",
     "@enterprise-ai-hub/telemetry-sdk": "workspace:*"
   }

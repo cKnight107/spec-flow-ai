@@ -1,0 +1,12 @@
+APP_ENV: development
+PORT: 3001
+MODEL_GATEWAY_TIMEOUT_MS: 60000
+
+MODEL_GATEWAY_PROVIDERS_JSON: >
+  [{"id":"openai-default","provider":"openai","baseUrl":"https://dashscope.aliyuncs.com/compatible-mode/v1","apiKeyEnv":"OPENAI_API_KEY"}]
+
+MODEL_GATEWAY_MODELS_JSON: >
+  [{"id":"qwen3.5-plus","providerModel":"qwen3.5-plus","providerInstance":"openai-default","type":"chat","displayName":"GPT 4.1 Mini","aliases":["support-assistant"],"capabilities":["chat"],"scenarioTags":["support"],"maxTokens":8192,"status":"active","pricing":{"inputPerMillionUsd":0.4,"outputPerMillionUsd":1.6,"currency":"USD"}}]
+
+MODEL_GATEWAY_ROUTES_JSON: >
+  []

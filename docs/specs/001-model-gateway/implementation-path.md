@@ -22,6 +22,13 @@
 ### P0：基础可用版
 目标：完成统一协议、真实调用链和基础 HTTP 入口，形成可对外调用的模型网关基础版。
 
+当前状态：已完成
+- 已补齐统一 DTO、错误码、成功/失败响应结构
+- 已完成 `providers / models / routes` 配置结构扩展
+- 已接入 `openai`、`anthropic` 两类 provider adapter
+- 已落地 `GET /v1/models` 与 `POST /v1/chat/completions`
+- 已打通 `request_id / traceparent / usage / cost / audit / trace / route` 闭环
+
 1. 规格收口
 - 细化 `spec.md` 中的统一协议、错误码、路由规则、审计字段、流式语义。
 - 细化 `tasks.md` 为分阶段任务，明确当前已完成项与待实现项。
@@ -83,13 +90,48 @@
 - 应用管理员只能绑定有权限的模型。
 - 高成本模型接入白名单或审批策略。
 
-12. 管理台与运营接口
-- 对接管理台的模型列表、路由配置、调用审计与链路查询接口。
-- 补按 `trace_id`、`request_id`、`user_id`、`model` 的检索接口契约。
+12. 控制面配置后管化
+- 将当前 `MODEL_GATEWAY_PROVIDERS_JSON`、`MODEL_GATEWAY_MODELS_JSON`、`MODEL_GATEWAY_ROUTES_JSON` 从“本地静态配置”演进为“控制面管理对象”。
+- 后管至少管理三类核心对象：`provider instance`、`model registration`、`route rule`。
+- `provider instance` 至少覆盖：名称、provider 类型、`baseUrl`、凭据引用、默认超时、默认 headers、状态。
+- `model registration` 至少覆盖：逻辑模型 ID、真实 `providerModel`、绑定的 `providerInstance`、模型类型、别名、能力标签、场景标签、价格、状态。
+- `route rule` 至少覆盖：`requestedModel`、`targetModel`、`tenantIds`、`appIds`、`priority`、启停状态、生效时间、备注。
+- 要求记录配置创建人、修改人、修改时间、变更原因与版本号，为后续审计和回滚提供依据。
 
-13. 测试与验证
+13. 运行时配置源演进
+- 在 `services/model-gateway/src/infrastructure` 增加配置源抽象，区分“静态配置源”和“控制面配置源”。
+- 首版建议采用“控制面数据库 / 配置中心 + 网关内存缓存”的读取模型，而不是每次请求直连控制面。
+- 启动时加载一次 `providers / models / routes` 到内存注册表，并支持定时刷新或事件驱动刷新。
+- 静态 YAML / JSON 配置继续保留为本地开发与 bootstrap fallback，不再作为长期唯一配置来源。
+- 运行时要保证 provider、model、route 三类对象的一致性校验，例如：
+  - provider 实例删除前需检查是否仍被模型引用
+  - 模型下线前需检查是否仍被路由引用
+  - 路由生效前需校验 `targetModel` 是否有效
+
+14. 管理台与运营接口
+- 对接管理台的供应商实例列表、模型注册列表、路由配置、调用审计与链路查询接口。
+- 补 provider、新增模型、变更路由、上下线模型的后端接口契约。
+- 补按 `trace_id`、`request_id`、`user_id`、`model` 的检索接口契约。
+- 补配置预检接口，例如“某条路由调整后将命中哪些模型 / app / tenant”的模拟验证能力。
+
+15. 测试与验证
 - 将当前仅依赖 `tsc --noEmit` 的测试基线升级为单元测试、契约测试、provider mock 集成测试。
 - 重点覆盖已注册模型调用、路由命中、流式输出、未注册模型报错、provider 超时回退、配额不足阻断、审计字段完整性。
+- 控制面相关测试补充：
+  - provider / model / route 的创建、修改、下线与删除约束
+  - 配置变更后的注册表刷新
+  - 配置版本回滚
+  - 权限不足时禁止修改 provider / model / route
+
+## 控制面演进建议
+- 当前 P0 的 `providers / models / routes` 配置可视为“静态种子配置”，目标是先跑通最小闭环。
+- 当模型选择逻辑逐步承载租户、应用、成本、主备、审批等治理能力后，`providers / models / routes` 将成为运行控制面的核心数据，不宜继续长期停留在本地 JSON / YAML。
+- 推荐演进顺序为：
+  1. 保留当前静态配置，作为开发环境和默认 bootstrap
+  2. 设计控制面数据模型与管理接口
+  3. 为 `model-gateway` 增加控制面配置源与本地缓存
+  4. 让管理台逐步接管 provider、新增模型、路由关系和上下线管理
+  5. 最终将静态配置降级为 fallback，而不是主要配置入口
 
 ## 建议目录落点
 - `services/model-gateway/src/controllers`
@@ -105,4 +147,4 @@
 ## 里程碑验收建议
 - P0 完成后：可通过 HTTP 调用至少两类 provider 的非流式 chat completion。
 - P1 完成后：具备流式输出、主备切换、基础重试 / 熔断、配额阻断、审计落库能力。
-- P2 完成后：具备权限审批、管理台查询接口和稳定自动化测试基线。
+- P2 完成后：具备权限审批、控制面配置管理、管理台查询接口和稳定自动化测试基线。
