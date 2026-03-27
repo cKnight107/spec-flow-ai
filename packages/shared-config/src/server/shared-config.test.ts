@@ -7,6 +7,7 @@ import { readPublicConfig } from "../public/read-public-config";
 import { loadPublicConfig } from "../public/load-public-config";
 import { adminConsoleSchema } from "../core/schema/admin-console";
 import { modelGatewaySchema } from "../core/schema/model-gateway";
+import { defineConfigProperties, defineField, stringParser } from "../core/fields";
 import { formatConfigDiagnostics } from "./diagnostics";
 import { loadConfigResult } from "./load-config";
 
@@ -131,6 +132,7 @@ API_BASE_URL=/gateway
   });
 
   assert.deepEqual(result, {
+    WEB_TITLE: "AI中台",
     NEXT_PUBLIC_APP_ENV: "development",
     NEXT_PUBLIC_CONSOLE_TITLE: "Shared Console",
     NEXT_PUBLIC_API_BASE_URL: "/gateway",
@@ -148,6 +150,7 @@ test("readPublicConfig 仍只返回声明为 public 的字段", () => {
   });
 
   assert.deepEqual(result, {
+    WEB_TITLE: "AI中台",
     NEXT_PUBLIC_APP_ENV: "development",
     NEXT_PUBLIC_CONSOLE_TITLE: "控制台",
     NEXT_PUBLIC_API_BASE_URL: "/gateway",
@@ -175,4 +178,53 @@ OPENAI_API_KEY=process-secret
   const output = formatConfigDiagnostics(result as never);
   assert.match(output, /profile=default/);
   assert.match(output, /MODEL_GATEWAY_PROVIDER <= config-file/);
+});
+
+test("支持类似 Spring Boot 的 prefix 配置绑定", () => {
+  const wechatSchema = defineConfigProperties({
+    prefix: "wechat",
+    fields: {
+      mchId: defineField({
+        parser: stringParser(),
+        scope: "server",
+        description: "直连商户号",
+      }),
+      appId: defineField({
+        parser: stringParser(),
+        scope: "server",
+        description: "应用 ID",
+      }),
+      apiV3Key: defineField({
+        parser: stringParser(),
+        scope: "server",
+        description: "API v3 密钥",
+      }),
+    },
+  });
+
+  const cwd = createFixtureDirectory({
+    "config.yaml": `
+wechat:
+  mch-id: mch-from-yaml
+  app-id: app-from-yaml
+  api-v3-key: \${WECHAT_API_V3_KEY}
+`,
+    ".env": `
+WECHAT_API_V3_KEY=secret-from-env
+`,
+  });
+
+  const result = loadConfigResult({
+    schema: wechatSchema,
+    cwd,
+    processEnv: {
+      WECHAT_MCH_ID: "mch-from-process-env",
+    },
+  });
+
+  assert.deepEqual(result.config, {
+    mchId: "mch-from-process-env",
+    appId: "app-from-yaml",
+    apiV3Key: "secret-from-env",
+  });
 });

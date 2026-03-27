@@ -172,6 +172,71 @@ NEXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
 - 如果整个值就是 `${VAR}`，且变量不存在，该字段视为未提供
 - 如果是 `"http://x/${VAR}"` 这种字符串模板，而变量不存在，会直接抛错
 
+## Prefix 配置绑定
+
+当你希望像 Spring Boot `@ConfigurationProperties(prefix = "wechat")` 一样读取一组配置时，可使用 `defineConfigProperties()`。
+
+YAML 可写成：
+
+```yaml
+wechat:
+  mch-id: wx-mch
+  app-id: wx-app
+  api-v3-key: ${WECHAT_API_V3_KEY}
+```
+
+Schema 可写成：
+
+```ts
+import {
+  defineConfigProperties,
+  defineField,
+  loadConfig,
+  stringParser,
+} from "@enterprise-ai-hub/shared-config/server";
+
+const wechatSchema = defineConfigProperties({
+  prefix: "wechat",
+  fields: {
+    mchId: defineField({
+      parser: stringParser(),
+      scope: "server",
+      description: "直连商户号",
+    }),
+    appId: defineField({
+      parser: stringParser(),
+      scope: "server",
+      description: "应用 ID",
+    }),
+    apiV3Key: defineField({
+      parser: stringParser(),
+      scope: "server",
+      description: "API v3 密钥",
+    }),
+  },
+});
+
+const wechatConfig = loadConfig({
+  schema: wechatSchema,
+  cwd: process.cwd(),
+});
+```
+
+结果对象将是：
+
+```ts
+{
+  mchId: "wx-mch",
+  appId: "wx-app",
+  apiV3Key: "secret"
+}
+```
+
+补充说明：
+- 默认会同时识别 `wechat.mch-id` 和 `WECHAT_MCH_ID`
+- `process.env` 仍会覆盖 YAML 中同名配置
+- 适合按 `wechat`、`oss`、`redis` 这类业务域分组配置
+
 ## 人员快速接入
 
 ### 1. 服务端接入

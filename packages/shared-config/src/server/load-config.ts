@@ -121,6 +121,43 @@ function stringifyYamlValue(value: unknown, context: string): string | undefined
   throw new Error(`${context} 只能是标量或标量数组，不能是对象`);
 }
 
+function isYamlMap(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function collectConfigDocumentEntries(options: {
+  value: unknown;
+  interpolationEnv: Record<string, string | undefined>;
+  pathSegments: readonly string[];
+  config: Record<string, string | undefined>;
+}): void {
+  if (options.value === undefined || options.value === null) {
+    return;
+  }
+
+  if (isYamlMap(options.value)) {
+    for (const [key, childValue] of Object.entries(options.value)) {
+      collectConfigDocumentEntries({
+        value: childValue,
+        interpolationEnv: options.interpolationEnv,
+        pathSegments: [...options.pathSegments, key],
+        config: options.config,
+      });
+    }
+
+    return;
+  }
+
+  const flattenedKey = options.pathSegments.join(".");
+  const context = `config.${flattenedKey}`;
+  const scalar = stringifyYamlValue(options.value, context);
+  if (scalar === undefined) {
+    return;
+  }
+
+  options.config[flattenedKey] = interpolateValue(scalar, options.interpolationEnv, context);
+}
+
 function interpolateValue(
   value: string,
   interpolationEnv: Record<string, string | undefined>,
@@ -154,19 +191,19 @@ function parseConfigDocument(options: {
   const parsed = YAML.parse(content) as Record<string, unknown> | null;
   const root = parsed ?? {};
 
-  if (typeof root !== "object" || Array.isArray(root)) {
+  if (!isYamlMap(root)) {
     throw new Error("配置文件根节点必须是键值对象");
   }
 
   const config: Record<string, string | undefined> = {};
 
   for (const [key, rawValue] of Object.entries(root)) {
-    const scalar = stringifyYamlValue(rawValue, `config.${key}`);
-    if (scalar === undefined) {
-      continue;
-    }
-
-    config[key] = interpolateValue(scalar, options.interpolationEnv, `config.${key}`);
+    collectConfigDocumentEntries({
+      value: rawValue,
+      interpolationEnv: options.interpolationEnv,
+      pathSegments: [key],
+      config,
+    });
   }
 
   return config;

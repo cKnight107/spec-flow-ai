@@ -30,6 +30,8 @@ export type FieldDefinition<
   TScope extends ConfigScope = ConfigScope,
 > = Readonly<{
   parser: ConfigParser<TValue>;
+  sourceKey?: string;
+  yamlPath?: string;
   scope: TScope;
   required: boolean;
   defaultValue?: TValue;

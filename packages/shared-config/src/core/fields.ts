@@ -8,6 +8,8 @@ import type {
 
 type FieldOptions<TValue, TScope extends ConfigScope> = Readonly<{
   parser: ConfigParser<TValue>;
+  sourceKey?: string;
+  yamlPath?: string;
   scope: TScope;
   required?: boolean;
   defaultValue?: TValue;
@@ -44,6 +46,14 @@ export function defineField<TValue, TScope extends ConfigScope>(
     deprecated: options.deprecated,
   };
 
+  if (Object.prototype.hasOwnProperty.call(options, "sourceKey")) {
+    field.sourceKey = options.sourceKey;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(options, "yamlPath")) {
+    field.yamlPath = options.yamlPath;
+  }
+
   if (Object.prototype.hasOwnProperty.call(options, "defaultValue")) {
     field.defaultValue = options.defaultValue;
   }
@@ -53,6 +63,73 @@ export function defineField<TValue, TScope extends ConfigScope>(
 
 export function defineSchema<const TSchema extends ConfigSchema>(schema: TSchema): TSchema {
   return Object.freeze({ ...schema });
+}
+
+type ConfigPropertiesOptions<TSchema extends ConfigSchema> = Readonly<{
+  prefix: string;
+  fields: TSchema;
+  envPrefix?: string;
+  yamlPrefix?: string;
+}>;
+
+function splitNameTokens(value: string): string[] {
+  const normalized = value
+    .replace(/([a-z0-9])([A-Z])/gu, "$1 $2")
+    .replace(/([A-Z])([A-Z][a-z0-9])/gu, "$1 $2")
+    .replace(/[^A-Za-z0-9]+/gu, " ")
+    .trim();
+
+  if (normalized.length === 0) {
+    return [];
+  }
+
+  return normalized.split(/\s+/u).map((token) => token.toLowerCase());
+}
+
+function toKebabCase(value: string): string {
+  return splitNameTokens(value).join("-");
+}
+
+function toUpperSnakeCase(value: string): string {
+  return splitNameTokens(value).join("_").toUpperCase();
+}
+
+function toKebabPath(value: string): string {
+  return value
+    .split(".")
+    .map((segment) => toKebabCase(segment))
+    .filter((segment) => segment.length > 0)
+    .join(".");
+}
+
+export function defineConfigProperties<const TSchema extends ConfigSchema>(
+  options: ConfigPropertiesOptions<TSchema>,
+): TSchema {
+  const envPrefix = options.envPrefix ?? toUpperSnakeCase(options.prefix);
+  const yamlPrefix = options.yamlPrefix ?? toKebabPath(options.prefix);
+  const schema: Record<string, FieldDefinition<unknown, ConfigScope>> = {};
+
+  for (const [key, field] of Object.entries(options.fields)) {
+    const derivedSourceKey =
+      field.sourceKey ??
+      [envPrefix, toUpperSnakeCase(key)]
+        .filter((segment) => segment.length > 0)
+        .join("_");
+    const derivedYamlPath =
+      field.yamlPath ??
+      [yamlPrefix, toKebabCase(key)]
+        .filter((segment) => segment.length > 0)
+        .join(".");
+
+    schema[key] = Object.freeze({
+      ...field,
+      sourceKey: derivedSourceKey,
+      yamlPath: derivedYamlPath,
+      aliases: Object.freeze([...field.aliases]),
+    }) as FieldDefinition<unknown, ConfigScope>;
+  }
+
+  return defineSchema(schema as TSchema);
 }
 
 export function mergeSchemas<const TSchemas extends readonly ConfigSchema[]>(
